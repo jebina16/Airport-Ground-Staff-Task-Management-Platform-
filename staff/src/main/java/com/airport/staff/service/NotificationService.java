@@ -12,15 +12,24 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final EmailService emailService;
 
     public NotificationService(
-            NotificationRepository notificationRepository) {
+            NotificationRepository notificationRepository,
+            EmailService emailService) {
+
         this.notificationRepository = notificationRepository;
+        this.emailService = emailService;
     }
 
     /**
-     * Creates and stores a notification for a user.
-     * Called automatically when a task is assigned or its status changes.
+     * Creates and stores an in-app notification for a user, AND
+     * sends a real email to their registered address.
+     *
+     * Called automatically when:
+     *  - an admin creates a new user account
+     *  - a supervisor assigns a task
+     *  - a staff member updates a task's status
      */
     public void send(User recipient, String title, String message) {
 
@@ -28,6 +37,7 @@ public class NotificationService {
             return;
         }
 
+        // 1. Store the in-app notification (always happens, instantly)
         Notification notification = new Notification();
         notification.setTitle(title);
         notification.setMessage(message);
@@ -36,6 +46,16 @@ public class NotificationService {
         notification.setStatus("UNREAD");
 
         notificationRepository.save(notification);
+
+        // 2. Send a real email in the background (does not block the request)
+        String emailBody = "Hi " + recipient.getFullName() + ",\n\n"
+                + message
+                + "\n\n— Airport Ground Staff Task Management Platform";
+
+        emailService.sendEmail(
+                recipient.getEmail(),
+                title,
+                emailBody);
     }
 
     public List<Notification> getMyNotifications(String email) {
