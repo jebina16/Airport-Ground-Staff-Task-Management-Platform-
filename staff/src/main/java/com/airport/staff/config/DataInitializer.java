@@ -38,12 +38,9 @@ public class DataInitializer {
                 admin.setRole(Role.ADMIN);
             }
 
-            if (!passwordEncoder.matches(
-                    adminPassword,
-                    admin.getPassword())) {
-
-                admin.setPassword(
-                        passwordEncoder.encode(adminPassword));
+            // Check and update password if not matching BCrypt
+            if (admin.getPassword() == null || !passwordEncoder.matches(adminPassword, admin.getPassword())) {
+                admin.setPassword(passwordEncoder.encode(adminPassword));
             }
 
             userRepository.save(admin);
@@ -77,14 +74,12 @@ public class DataInitializer {
                 departmentRepository.save(
                         newDepartment("Boarding Support", "Terminal 2"));
 
-                System.out.println(
-                        "6 default departments created");
+                System.out.println("6 default departments created");
             }
         };
     }
 
     private Department newDepartment(String name, String location) {
-
         Department department = new Department();
         department.setDepartmentName(name);
         department.setLocation(location);
