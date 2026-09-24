@@ -1,39 +1,27 @@
 import { useEffect, useState } from 'react';
-
 import api from '../api/axios';
 
 function StaffList() {
 
-    const [users, setUsers] =
-        useState([]);
+    const [users, setUsers] = useState([]);
+    const [departments, setDepartments] = useState([]);
 
-    const [departments, setDepartments] =
-        useState([]);
+    const [form, setForm] = useState({
+        fullName: '',
+        email: '',
+        password: '',
+        role: 'STAFF',
+        employeeCode: '',
+        designation: '',
+        phone: '',
+        shift: '',
+        departmentId: ''
+    });
 
-    const [form, setForm] =
-        useState({
-            fullName: '',
-            email: '',
-            password: '',
-            role: 'STAFF',
-            employeeCode: '',
-            designation: '',
-            phone: '',
-            shift: '',
-            departmentId: ''
-        });
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
 
-    const [message, setMessage] =
-        useState('');
-
-    const [error, setError] =
-        useState('');
-
-    const user =
-        JSON.parse(
-            localStorage.getItem('user') ||
-            'null'
-        );
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
 
 
     // ==========================================
@@ -41,26 +29,12 @@ function StaffList() {
     // ==========================================
 
     const fetchUsers = async () => {
-
         try {
-
-            const response =
-                await api.get(
-                    '/admin/users'
-                );
-
+            const response = await api.get('/admin/users');
             setUsers(response.data);
-
         } catch (error) {
-
-            console.error(
-                'Unable to fetch users:',
-                error
-            );
-
-            setError(
-                'Unable to load users'
-            );
+            console.error('Unable to fetch users:', error);
+            setError('Unable to load users');
         }
     };
 
@@ -69,32 +43,15 @@ function StaffList() {
     // FETCH DEPARTMENTS
     // ==========================================
 
-    const fetchDepartments =
-        async () => {
-
-            try {
-
-                const response =
-                    await api.get(
-                        '/departments'
-                    );
-
-                setDepartments(
-                    response.data
-                );
-
-            } catch (error) {
-
-                console.error(
-                    'Unable to fetch departments:',
-                    error
-                );
-
-                setError(
-                    'Unable to load departments'
-                );
-            }
-        };
+    const fetchDepartments = async () => {
+        try {
+            const response = await api.get('/departments');
+            setDepartments(response.data);
+        } catch (error) {
+            console.error('Unable to fetch departments:', error);
+            setError('Unable to load departments');
+        }
+    };
 
 
     // ==========================================
@@ -102,14 +59,10 @@ function StaffList() {
     // ==========================================
 
     useEffect(() => {
-
         if (user?.role === 'ADMIN') {
-
             fetchUsers();
-
             fetchDepartments();
         }
-
     }, []);
 
 
@@ -118,16 +71,8 @@ function StaffList() {
     // ==========================================
 
     const handleChange = (e) => {
-
-        const {
-            name,
-            value
-        } = e.target;
-
-        setForm({
-            ...form,
-            [name]: value
-        });
+        const { name, value } = e.target;
+        setForm({ ...form, [name]: value });
     };
 
 
@@ -135,58 +80,43 @@ function StaffList() {
     // CREATE USER
     // ==========================================
 
-    const handleSubmit =
-        async (e) => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setMessage('');
+        setError('');
 
-            e.preventDefault();
+        try {
+            await api.post('/admin/users', {
+                ...form,
+                departmentId: form.departmentId
+                    ? Number(form.departmentId)
+                    : null
+            });
 
-            setMessage('');
-            setError('');
+            setMessage(`${form.role} account created successfully`);
 
-            try {
+            setForm({
+                fullName: '',
+                email: '',
+                password: '',
+                role: 'STAFF',
+                employeeCode: '',
+                designation: '',
+                phone: '',
+                shift: '',
+                departmentId: ''
+            });
 
-                await api.post(
-                    '/admin/users',
-                    {
-                        ...form,
+            fetchUsers();
 
-                        departmentId:
-                            form.departmentId
-                                ? Number(
-                                    form.departmentId
-                                )
-                                : null
-                    }
-                );
-
-                setMessage(
-                    `${form.role} account created successfully`
-                );
-
-                setForm({
-                    fullName: '',
-                    email: '',
-                    password: '',
-                    role: 'STAFF',
-                    employeeCode: '',
-                    designation: '',
-                    phone: '',
-                    shift: '',
-                    departmentId: ''
-                });
-
-                fetchUsers();
-
-            } catch (error) {
-
-                console.error(error);
-
-                setError(
-                    error.response?.data?.message ||
-                    'Unable to create user'
-                );
-            }
-        };
+        } catch (error) {
+            console.error(error);
+            setError(
+                error.response?.data?.message ||
+                'Unable to create user'
+            );
+        }
+    };
 
 
     // ==========================================
@@ -194,19 +124,10 @@ function StaffList() {
     // ==========================================
 
     if (user?.role !== 'ADMIN') {
-
         return (
             <div className="page-container">
-
-                <h1>
-                    Staff Management
-                </h1>
-
-                <p>
-                    Only Admin can create
-                    and manage user accounts.
-                </p>
-
+                <h1>Staff Management</h1>
+                <p>Only Admin can create and manage user accounts.</p>
             </div>
         );
     }
@@ -219,20 +140,10 @@ function StaffList() {
             {/* PAGE HEADER */}
 
             <div className="page-header">
-
                 <div>
-
-                    <h1>
-                        User Management
-                    </h1>
-
-                    <p>
-                        Create Supervisor
-                        and Staff accounts
-                    </p>
-
+                    <h1>User Management</h1>
+                    <p>Create Supervisor and Staff accounts</p>
                 </div>
-
             </div>
 
 
@@ -240,108 +151,68 @@ function StaffList() {
 
             <div className="form-card">
 
-                <h2>
-                    Create New User
-                </h2>
+                <h2>Create New User</h2>
 
-                <form
-                    className="form-grid"
-                    onSubmit={handleSubmit}
-                >
+                <form className="form-grid" onSubmit={handleSubmit}>
 
                     {/* FULL NAME */}
 
                     <div>
-
-                        <label>
-                            Full Name
-                        </label>
-
+                        <label>Full Name</label>
                         <input
                             type="text"
                             name="fullName"
                             value={form.fullName}
-                            onChange={
-                                handleChange
-                            }
+                            onChange={handleChange}
                             placeholder="Enter full name"
                             required
                         />
-
                     </div>
 
 
                     {/* EMAIL */}
 
                     <div>
-
-                        <label>
-                            Email
-                        </label>
-
+                        <label>Email</label>
                         <input
                             type="email"
                             name="email"
                             value={form.email}
-                            onChange={
-                                handleChange
-                            }
+                            onChange={handleChange}
                             placeholder="Enter email"
                             required
                         />
-
                     </div>
 
 
                     {/* PASSWORD */}
 
                     <div>
-
-                        <label>
-                            Password
-                        </label>
-
+                        <label>Password</label>
                         <input
                             type="password"
                             name="password"
                             value={form.password}
-                            onChange={
-                                handleChange
-                            }
+                            onChange={handleChange}
                             placeholder="Enter password"
                             required
                         />
-
                     </div>
 
 
                     {/* ROLE */}
 
                     <div>
-
-                        <label>
-                            Role
-                        </label>
-
+                        <label>Role</label>
                         <select
                             name="role"
                             value={form.role}
-                            onChange={
-                                handleChange
-                            }
+                            onChange={handleChange}
                             required
                         >
-
-                            <option value="STAFF">
-                                Staff
-                            </option>
-
-                            <option value="SUPERVISOR">
-                                Supervisor
-                            </option>
-
+                            <option value="STAFF">Staff</option>
+                            <option value="SUPERVISOR">Supervisor</option>
                         </select>
-
                     </div>
 
 
@@ -354,205 +225,121 @@ function StaffList() {
                             {/* EMPLOYEE CODE */}
 
                             <div>
-
-                                <label>
-                                    Employee Code
-                                </label>
-
+                                <label>Employee Code</label>
                                 <input
                                     type="text"
                                     name="employeeCode"
-                                    value={
-                                        form.employeeCode
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
+                                    value={form.employeeCode}
+                                    onChange={handleChange}
                                     placeholder="e.g. GS001"
                                     required
                                 />
-
                             </div>
 
 
                             {/* DESIGNATION */}
 
                             <div>
-
-                                <label>
-                                    Designation
-                                </label>
-
+                                <label>Designation</label>
                                 <input
                                     type="text"
                                     name="designation"
-                                    value={
-                                        form.designation
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
+                                    value={form.designation}
+                                    onChange={handleChange}
                                     placeholder="e.g. Ground Staff"
                                     required
                                 />
-
                             </div>
 
 
                             {/* PHONE */}
 
                             <div>
-
-                                <label>
-                                    Phone
-                                </label>
-
+                                <label>Phone</label>
                                 <input
                                     type="tel"
                                     name="phone"
-                                    value={
-                                        form.phone
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
+                                    value={form.phone}
+                                    onChange={handleChange}
                                     placeholder="Enter phone number"
                                     required
                                 />
-
                             </div>
 
 
                             {/* SHIFT */}
 
                             <div>
-
-                                <label>
-                                    Shift
-                                </label>
-
+                                <label>Shift</label>
                                 <select
                                     name="shift"
-                                    value={
-                                        form.shift
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
+                                    value={form.shift}
+                                    onChange={handleChange}
                                     required
                                 >
-
-                                    <option value="">
-                                        Select Shift
-                                    </option>
-
-                                    <option value="MORNING">
-                                        Morning
-                                    </option>
-
-                                    <option value="EVENING">
-                                        Evening
-                                    </option>
-
-                                    <option value="NIGHT">
-                                        Night
-                                    </option>
-
+                                    <option value="">Select Shift</option>
+                                    <option value="MORNING">Morning</option>
+                                    <option value="EVENING">Evening</option>
+                                    <option value="NIGHT">Night</option>
                                 </select>
-
-                            </div>
-
-
-                            {/* DEPARTMENT */}
-
-                            <div>
-
-                                <label>
-                                    Department
-                                </label>
-
-                                <select
-                                    name="departmentId"
-                                    value={
-                                        form.departmentId
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
-                                    required
-                                >
-
-                                    <option value="">
-                                        Select Department
-                                    </option>
-
-                                    {departments.map(
-                                        (department) => (
-
-                                            <option
-                                                key={
-                                                    department.departmentId
-                                                }
-                                                value={
-                                                    department.departmentId
-                                                }
-                                            >
-
-                                                {
-                                                    department.departmentName
-                                                }
-
-                                            </option>
-
-                                        )
-                                    )}
-
-                                </select>
-
                             </div>
 
                         </>
+                    )}
 
+
+                    {/* DEPARTMENT — needed for BOTH Staff and Supervisor */}
+
+                    {(form.role === 'STAFF' || form.role === 'SUPERVISOR') && (
+
+                        <div>
+                            <label>Department</label>
+                            <select
+                                name="departmentId"
+                                value={form.departmentId}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Select Department</option>
+
+                                {departments.map((department) => (
+                                    <option
+                                        key={department.departmentId}
+                                        value={department.departmentId}
+                                    >
+                                        {department.departmentName}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     )}
 
 
                     {/* SUCCESS MESSAGE */}
 
                     {message && (
-
                         <div className="success-message">
-
                             {message}
-
                         </div>
-
                     )}
 
 
                     {/* ERROR MESSAGE */}
 
                     {error && (
-
                         <div className="error-message">
-
                             {error}
-
                         </div>
-
                     )}
 
 
                     {/* SUBMIT */}
 
-                    <button
-                        type="submit"
-                        className="primary-button"
-                    >
+                    <button type="submit" className="primary-button">
                         Create Account
                     </button>
 
                 </form>
-
             </div>
 
 
@@ -560,94 +347,37 @@ function StaffList() {
 
             <div className="table-card">
 
-                <h2>
-                    Existing Users
-                </h2>
+                <h2>Existing Users</h2>
 
                 <table>
-
                     <thead>
-
                         <tr>
-
-                            <th>
-                                Name
-                            </th>
-
-                            <th>
-                                Email
-                            </th>
-
-                            <th>
-                                Role
-                            </th>
-
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
                         </tr>
-
                     </thead>
-
                     <tbody>
-
                         {users.length === 0 ? (
-
                             <tr>
-
-                                <td
-                                    colSpan="3"
-                                >
-                                    No users found
-                                </td>
-
+                                <td colSpan="3">No users found</td>
                             </tr>
-
                         ) : (
-
-                            users.map(
-                                (u) => (
-
-                                    <tr
-                                        key={
-                                            u.userId
-                                        }
-                                    >
-
-                                        <td>
-                                            {
-                                                u.fullName
-                                            }
-                                        </td>
-
-                                        <td>
-                                            {
-                                                u.email
-                                            }
-                                        </td>
-
-                                        <td>
-
-                                            <span
-                                                className="role-badge"
-                                            >
-                                                {
-                                                    u.role
-                                                }
-                                            </span>
-
-                                        </td>
-
-                                    </tr>
-
-                                )
-                            )
-
+                            users.map((u) => (
+                                <tr key={u.userId}>
+                                    <td>{u.fullName}</td>
+                                    <td>{u.email}</td>
+                                    <td>
+                                        <span className="role-badge">
+                                            {u.role}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))
                         )}
-
                     </tbody>
-
                 </table>
-
             </div>
-
         </div>
     );
 }
