@@ -1,3 +1,4 @@
+
 package com.airport.staff.config;
 
 import com.airport.staff.model.Department;
@@ -22,14 +23,10 @@ public class DataInitializer {
 
         return args -> {
 
-            // ---------- Default Admin ----------
-
             String adminEmail = "admin@airport.com";
             String adminPassword = "admin123";
 
-            User admin = userRepository
-                    .findByEmail(adminEmail)
-                    .orElse(null);
+            User admin = userRepository.findByEmail(adminEmail).orElse(null);
 
             if (admin == null) {
                 admin = new User();
@@ -38,8 +35,7 @@ public class DataInitializer {
                 admin.setRole(Role.ADMIN);
             }
 
-            // Check and update password if not matching BCrypt
-            if (admin.getPassword() == null || !passwordEncoder.matches(adminPassword, admin.getPassword())) {
+            if (!passwordEncoder.matches(adminPassword, admin.getPassword())) {
                 admin.setPassword(passwordEncoder.encode(adminPassword));
             }
 
@@ -51,28 +47,14 @@ public class DataInitializer {
             System.out.println("Password : admin123");
             System.out.println("======================================");
 
-
-            // ---------- Default Departments ----------
-
             if (departmentRepository.count() == 0) {
 
-                departmentRepository.save(
-                        newDepartment("Baggage Handling", "Terminal 1"));
-
-                departmentRepository.save(
-                        newDepartment("Aircraft Cleaning", "Terminal 1"));
-
-                departmentRepository.save(
-                        newDepartment("Refueling Coordination", "Apron Zone A"));
-
-                departmentRepository.save(
-                        newDepartment("Passenger Assistance", "Terminal 2"));
-
-                departmentRepository.save(
-                        newDepartment("Cargo Handling", "Cargo Terminal"));
-
-                departmentRepository.save(
-                        newDepartment("Boarding Support", "Terminal 2"));
+                departmentRepository.save(newDepartment("Baggage Handling", "Terminal 1"));
+                departmentRepository.save(newDepartment("Aircraft Cleaning", "Terminal 1"));
+                departmentRepository.save(newDepartment("Refueling Coordination", "Apron Zone A"));
+                departmentRepository.save(newDepartment("Passenger Assistance", "Terminal 2"));
+                departmentRepository.save(newDepartment("Cargo Handling", "Cargo Terminal"));
+                departmentRepository.save(newDepartment("Boarding Support", "Terminal 2"));
 
                 System.out.println("6 default departments created");
             }
