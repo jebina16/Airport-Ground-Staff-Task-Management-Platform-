@@ -1,101 +1,88 @@
+
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
+import TaskDetailModal from '../components/TaskDetailModal';
 
 function Notifications() {
 
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [openTaskId, setOpenTaskId] = useState(null);
 
     const fetchNotifications = async () => {
         try {
             const response = await api.get('/notifications');
             setNotifications(response.data);
         } catch (error) {
-            console.error('Unable to load notifications:', error);
+            console.error(error);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchNotifications();
-    }, []);
+    useEffect(() => { fetchNotifications(); }, []);
 
-    const markAsRead = async (id) => {
-        try {
-            await api.put(`/notifications/${id}/read`);
+    const openNotification = async (n) => {
+        if (n.status === 'UNREAD') {
+            await api.put(`/notifications/${n.notificationId}/read`);
             fetchNotifications();
-        } catch (error) {
-            console.error(error);
+        }
+        if (n.relatedTaskId) {
+            setOpenTaskId(n.relatedTaskId);
         }
     };
 
     const markAllAsRead = async () => {
-        try {
-            await api.put('/notifications/read-all');
-            fetchNotifications();
-        } catch (error) {
-            console.error(error);
-        }
+        await api.put('/notifications/read-all');
+        fetchNotifications();
     };
 
-    if (loading) {
-        return <div className="loading">Loading notifications...</div>;
-    }
+    if (loading) return <div style={{ padding: '2rem' }}>Loading notifications...</div>;
 
     return (
-        <div style={{ padding: '2rem' }}>
+        <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
 
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.5rem'
-            }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                 <h1>Notifications</h1>
-                <button onClick={markAllAsRead}>
-                    Mark all as read
-                </button>
+                <button onClick={markAllAsRead}>Mark all as read</button>
             </div>
 
-            {notifications.length === 0 && (
-                <p>No notifications yet.</p>
-            )}
+            {notifications.length === 0 && <p>No notifications yet.</p>}
 
             {notifications.map((n) => (
                 <div
                     key={n.notificationId}
+                    onClick={() => openNotification(n)}
                     style={{
                         border: '1px solid #ddd',
                         borderRadius: '8px',
                         padding: '1rem',
                         marginBottom: '0.75rem',
-                        background: n.status === 'UNREAD'
-                            ? '#f0f7ff'
-                            : '#ffffff'
+                        background: n.status === 'UNREAD' ? '#f0f7ff' : '#fff',
+                        cursor: n.relatedTaskId ? 'pointer' : 'default'
                     }}
                 >
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between'
-                    }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <strong>{n.title}</strong>
                         <span style={{ fontSize: '0.8rem', color: '#666' }}>
-                            {n.sentDate
-                                ? new Date(n.sentDate).toLocaleString()
-                                : ''}
+                            {n.sentDate ? new Date(n.sentDate).toLocaleString() : ''}
                         </span>
                     </div>
-
                     <p style={{ margin: '0.5rem 0' }}>{n.message}</p>
-
-                    {n.status === 'UNREAD' && (
-                        <button onClick={() => markAsRead(n.notificationId)}>
-                            Mark as read
-                        </button>
+                    {n.relatedTaskId && (
+                        <span style={{ fontSize: '0.8rem', color: '#2874a6' }}>
+                            Click to view task →
+                        </span>
                     )}
                 </div>
             ))}
+
+            {openTaskId && (
+                <TaskDetailModal
+                    taskId={openTaskId}
+                    onClose={() => setOpenTaskId(null)}
+                />
+            )}
         </div>
     );
 }

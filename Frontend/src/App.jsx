@@ -1,9 +1,5 @@
-import {
-    BrowserRouter as Router,
-    Routes,
-    Route,
-    Navigate
-} from 'react-router-dom';
+
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -14,76 +10,40 @@ import Notifications from './pages/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-
     return (
-
         <Router>
-
             <Routes>
 
-                <Route
-                    path="/login"
-                    element={<Login />}
-                />
-
+                <Route path="/login" element={<Login />} />
 
                 <Route
                     path="/dashboard"
-                    element={
-                        <ProtectedRoute>
-                            <Dashboard />
-                        </ProtectedRoute>
-                    }
+                    element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
                 />
 
-
+                {/* Only Admin can create/remove users */}
                 <Route
                     path="/staff"
                     element={
-                        <ProtectedRoute
-                            allowedRoles={[
-                                'ADMIN',
-                                'SUPERVISOR'
-                            ]}
-                        >
+                        <ProtectedRoute allowedRoles={['ADMIN']}>
                             <StaffList />
                         </ProtectedRoute>
                     }
                 />
 
-
                 <Route
                     path="/tasks"
-                    element={
-                        <ProtectedRoute>
-                            <TaskList />
-                        </ProtectedRoute>
-                    }
+                    element={<ProtectedRoute><TaskList /></ProtectedRoute>}
                 />
-
 
                 <Route
                     path="/notifications"
-                    element={
-                        <ProtectedRoute>
-                            <Notifications />
-                        </ProtectedRoute>
-                    }
+                    element={<ProtectedRoute><Notifications /></ProtectedRoute>}
                 />
 
-
-                <Route
-                    path="*"
-                    element={
-                        <Navigate
-                            to="/login"
-                            replace
-                        />
-                    }
-                />
+                <Route path="*" element={<Navigate to="/login" replace />} />
 
             </Routes>
-
         </Router>
     );
 }

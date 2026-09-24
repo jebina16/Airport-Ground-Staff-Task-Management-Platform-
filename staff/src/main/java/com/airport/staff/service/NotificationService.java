@@ -1,8 +1,11 @@
+
 package com.airport.staff.service;
 
 import com.airport.staff.model.Notification;
+import com.airport.staff.model.Role;
 import com.airport.staff.model.User;
 import com.airport.staff.repository.NotificationRepository;
+import com.airport.staff.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -12,82 +15,76 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
     private final EmailService emailService;
 
     public NotificationService(
             NotificationRepository notificationRepository,
+            UserRepository userRepository,
             EmailService emailService) {
 
         this.notificationRepository = notificationRepository;
+        this.userRepository = userRepository;
         this.emailService = emailService;
     }
 
-    /**
-     * Creates and stores an in-app notification for a user, AND
-     * sends a real email to their registered address.
-     *
-     * Called automatically when:
-     *  - an admin creates a new user account
-     *  - a supervisor assigns a task
-     *  - a staff member updates a task's status
-     */
     public void send(User recipient, String title, String message) {
+        send(recipient, title, message, null);
+    }
+
+    public void send(User recipient, String title, String message, Long relatedTaskId) {
 
         if (recipient == null) {
             return;
         }
 
-        // 1. Store the in-app notification (always happens, instantly)
         Notification notification = new Notification();
         notification.setTitle(title);
         notification.setMessage(message);
         notification.setRecipient(recipient);
         notification.setSentDate(LocalDateTime.now());
         notification.setStatus("UNREAD");
+        notification.setRelatedTaskId(relatedTaskId);
 
         notificationRepository.save(notification);
 
-        // 2. Send a real email in the background (does not block the request)
         String emailBody = "Hi " + recipient.getFullName() + ",\n\n"
                 + message
                 + "\n\n— Airport Ground Staff Task Management Platform";
 
-        emailService.sendEmail(
-                recipient.getEmail(),
-                title,
-                emailBody);
+        emailService.sendEmail(recipient.getEmail(), title, emailBody);
+    }
+
+    /** Notifies every ADMIN account — used when a task is completed. */
+    public void notifyAllAdmins(String title, String message, Long relatedTaskId) {
+
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+
+        for (User admin : admins) {
+            send(admin, title, message, relatedTaskId);
+        }
     }
 
     public List<Notification> getMyNotifications(String email) {
-        return notificationRepository
-                .findByRecipientEmailOrderBySentDateDesc(email);
+        return notificationRepository.findByRecipientEmailOrderBySentDateDesc(email);
     }
 
     public long getUnreadCount(String email) {
-        return notificationRepository
-                .countByRecipientEmailAndStatus(email, "UNREAD");
+        return notificationRepository.countByRecipientEmailAndStatus(email, "UNREAD");
     }
 
     public Notification markAsRead(Long notificationId) {
-
-        Notification notification = notificationRepository
-                .findById(notificationId)
-                .orElseThrow(() ->
-                        new RuntimeException("Notification not found"));
-
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
         notification.setStatus("READ");
         return notificationRepository.save(notification);
     }
 
     public void markAllAsRead(String email) {
-
-        List<Notification> list = notificationRepository
-                .findByRecipientEmailOrderBySentDateDesc(email);
-
+        List<Notification> list = notificationRepository.findByRecipientEmailOrderBySentDateDesc(email);
         for (Notification n : list) {
             n.setStatus("READ");
         }
-
         notificationRepository.saveAll(list);
     }
 }

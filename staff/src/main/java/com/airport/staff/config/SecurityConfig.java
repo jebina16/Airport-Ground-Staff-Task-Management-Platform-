@@ -22,7 +22,7 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
 
     // Comma-separated list, e.g.
-    // "http://localhost:5173,https://airport-ground-staff.netlify.app"
+    // "http://localhost:5173,https://willowy-kleicha-c9d9d5.netlify.app"
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private String allowedOrigins;
 

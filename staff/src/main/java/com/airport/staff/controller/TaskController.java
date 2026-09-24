@@ -1,6 +1,5 @@
 package com.airport.staff.controller;
 
-import com.airport.staff.dto.StatusRequest;
 import com.airport.staff.dto.TaskRequest;
 import com.airport.staff.model.Task;
 import com.airport.staff.service.TaskService;
@@ -17,9 +16,7 @@ public class TaskController {
 
     private final TaskService taskService;
 
-    public TaskController(
-            TaskService taskService) {
-
+    public TaskController(TaskService taskService) {
         this.taskService = taskService;
     }
 
@@ -28,47 +25,50 @@ public class TaskController {
             @RequestBody TaskRequest request,
             Authentication authentication) {
 
-        String email =
-                authentication.getName();
-
         return ResponseEntity.ok(
-                taskService.createTask(
-                        request,
-                        email
-                )
-        );
+                taskService.createTask(request, authentication.getName()));
     }
 
     @GetMapping
-    public ResponseEntity<List<Task>> getTasks(
-            Authentication authentication) {
+    public ResponseEntity<List<Task>> getAllTasks() {
+        return ResponseEntity.ok(taskService.getAllTasks());
+    }
 
-        return ResponseEntity.ok(
-                taskService.getAllTasks()
-        );
+    @GetMapping("/{id}")
+    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<Task>> getMyTasks(
+    public ResponseEntity<List<Task>> getMyTasks(Authentication authentication) {
+        return ResponseEntity.ok(taskService.getMyTasks(authentication.getName()));
+    }
+
+    @GetMapping("/department")
+    public ResponseEntity<List<Task>> getDepartmentTasks(Authentication authentication) {
+        return ResponseEntity.ok(taskService.getDepartmentTasks(authentication.getName()));
+    }
+
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Task> completeTask(
+            @PathVariable Long id,
             Authentication authentication) {
 
         return ResponseEntity.ok(
-                taskService.getMyTasks(
-                        authentication.getName()
-                )
-        );
+                taskService.completeTask(id, authentication.getName()));
     }
 
-    @PutMapping("/{taskId}/status")
-    public ResponseEntity<Task> updateStatus(
-            @PathVariable Long taskId,
-            @RequestBody StatusRequest request) {
+    @PutMapping("/{id}/acknowledge")
+    public ResponseEntity<Task> acknowledgeTask(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.acknowledgeTask(id));
+    }
 
-        return ResponseEntity.ok(
-                taskService.updateStatus(
-                        taskId,
-                        request.getStatus()
-                )
-        );
+    @PutMapping("/{id}/nudge")
+    public ResponseEntity<Void> nudgeStaff(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        taskService.nudgeStaff(id, authentication.getName());
+        return ResponseEntity.ok().build();
     }
 }
